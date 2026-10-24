@@ -17,13 +17,13 @@
   {
     "id": "asset-pricing",
     "title": "Empirical Asset Pricing Replication",
-    "description": "Replication of selected empirical analyses using CRSP and Compustat stock characteristics.",
+    "description": "Selected empirical asset pricing replications using CRSP and Compustat, with original reports on preliminaries, summary statistics, correlation, persistence, and the market factor.",
     "methods": [
       "Empirical finance",
       "R / Python",
       "CRSP / Compustat"
     ],
-    "status": "Report forthcoming",
+    "status": "Replication reports",
     "featured": true,
     "url": "projects/asset-pricing.html",
     "pdf": null,
