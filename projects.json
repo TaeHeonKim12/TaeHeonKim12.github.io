@@ -71,5 +71,20 @@
     "url": "projects/data-engineering.html",
     "pdf": null,
     "github": null
+  },
+  {
+    "id": "ai-coursework",
+    "title": "Artificial Intelligence Coursework",
+    "description": "Eleven labs and five assignments covering numerical optimization, neural networks from scratch, Bayes filtering, object detection, and reinforcement learning. Includes handwritten derivations and archived notebook outputs.",
+    "methods": [
+      "Python / NumPy",
+      "Neural networks",
+      "Probabilistic models"
+    ],
+    "status": "Coursework archive",
+    "featured": false,
+    "url": "projects/ai-study/index.html",
+    "pdf": null,
+    "github": "https://github.com/TaeHeonKim12/AI_study"
   }
 ]

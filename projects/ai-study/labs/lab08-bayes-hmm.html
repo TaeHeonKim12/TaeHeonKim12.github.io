@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="From Bayes’ rule to hidden Markov models: measurement updates, Markov chains, and the forward algorithm.">
+
+<title>Lab 8 · Bayes’ Rule, Markov Chains &amp; Hidden Markov Models – AI Coursework Portfolio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-5a1953863e1f72ef3b996ef827f01ca7.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-f23f3abacce5018a45925e4353268522.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-235808c26121bd067afe39225fbd88dc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-f23f3abacce5018a45925e4353268522.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">AI Coursework Portfolio</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../publication-notes.html"> 
+<span class="menu-text">Source &amp; Notes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="../index.html" aria-current="page"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../labs/lab02-numerical-differentiation.html"> 
+<span class="menu-text">Labs</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../assignments/optimization-gradient-descent.html"> 
+<span class="menu-text">Assignments</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../labs/lab02-numerical-differentiation.html">Lab Sessions</a></li><li class="breadcrumb-item"><a href="../labs/lab08-bayes-hmm.html">8 · Bayes' Rule &amp; HMM</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Lab Sessions</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../labs/lab02-numerical-differentiation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2 · Numerical Differentiation &amp; Gradient Descent</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../labs/lab03-linear-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3 · Linear Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../labs/lab04-classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4 · Logistic &amp; Softmax Classification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../labs/lab05-mlp-backpropagation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5 · MLP &amp; Backpropagation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../labs/lab06-computational-graph.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6 · Computational Graphs (MNIST)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../labs/lab07-tensorflow-keras.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">7 · TensorFlow &amp; Keras</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../labs/lab08-bayes-hmm.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">8 · Bayes' Rule &amp; HMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../labs/lab09-rnn-lstm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">9 · RNN &amp; LSTM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../labs/lab10-object-detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">10 · Object Detection (YOLO)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../labs/lab11-trees-ensembles-svm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">11 · Trees, Ensembles &amp; SVM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../labs/lab12-mdp-reinforcement-learning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">12 · MDP &amp; Reinforcement Learning</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Assignments</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../assignments/optimization-gradient-descent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Optimization &amp; Gradient Descent</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../assignments/neural-networks-from-scratch.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Neural Networks from Scratch</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../assignments/hmm-bayes-filter.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">HMM &amp; Bayes Filter</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../assignments/value-iteration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Value Iteration</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../assignments/yolo-custom-detector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">YOLOv4 Custom Detector</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#bayes-rule" id="toc-bayes-rule" class="nav-link active" data-scroll-target="#bayes-rule">1. Bayes’ Rule</a>
+  <ul>
+  <li><a href="#example-1-the-man-in-grey-trousers" id="toc-example-1-the-man-in-grey-trousers" class="nav-link" data-scroll-target="#example-1-the-man-in-grey-trousers">1.1 Example 1: The man in grey trousers</a></li>
+  <li><a href="#example-2-black-and-white-buttons" id="toc-example-2-black-and-white-buttons" class="nav-link" data-scroll-target="#example-2-black-and-white-buttons">1.2 Example 2: Black and white buttons</a></li>
+  </ul></li>
+  <li><a href="#measurement-model" id="toc-measurement-model" class="nav-link" data-scroll-target="#measurement-model">2. Measurement Model</a>
+  <ul>
+  <li><a href="#example-1-what-is-the-probability-that-the-door-is-open-one-observation" id="toc-example-1-what-is-the-probability-that-the-door-is-open-one-observation" class="nav-link" data-scroll-target="#example-1-what-is-the-probability-that-the-door-is-open-one-observation">2.1 Example 1: What is the probability that the door is open? (one observation)</a></li>
+  </ul></li>
+  <li><a href="#state-transition-model-without-control" id="toc-state-transition-model-without-control" class="nav-link" data-scroll-target="#state-transition-model-without-control">3. State Transition Model (without Control)</a>
+  <ul>
+  <li><a href="#example-1-coin-tossing" id="toc-example-1-coin-tossing" class="nav-link" data-scroll-target="#example-1-coin-tossing">3.1 Example 1: Coin tossing</a></li>
+  <li><a href="#example-2-weather-transitions" id="toc-example-2-weather-transitions" class="nav-link" data-scroll-target="#example-2-weather-transitions">3.2 Example 2: Weather transitions</a></li>
+  </ul></li>
+  <li><a href="#hidden-markov-model-without-control" id="toc-hidden-markov-model-without-control" class="nav-link" data-scroll-target="#hidden-markov-model-without-control">4. Hidden Markov Model (without Control)</a>
+  <ul>
+  <li><a href="#example-1-what-is-the-probability-that-the-door-is-open-n-observations" id="toc-example-1-what-is-the-probability-that-the-door-is-open-n-observations" class="nav-link" data-scroll-target="#example-1-what-is-the-probability-that-the-door-is-open-n-observations">4.1 Example 1: What is the probability that the door is open? (n observations)</a></li>
+  <li><a href="#example-2-weather-transitions-measurements" id="toc-example-2-weather-transitions-measurements" class="nav-link" data-scroll-target="#example-2-weather-transitions-measurements">4.2 Example 2: Weather transitions + measurements</a></li>
+  <li><a href="#limitations-of-hmms-and-the-need-for-rnns" id="toc-limitations-of-hmms-and-the-need-for-rnns" class="nav-link" data-scroll-target="#limitations-of-hmms-and-the-need-for-rnns">4.3 Limitations of HMMs and the Need for RNNs</a></li>
+  <li><a href="#appendix-pca-experiments" id="toc-appendix-pca-experiments" class="nav-link" data-scroll-target="#appendix-pca-experiments">Appendix · PCA Experiments</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../labs/lab02-numerical-differentiation.html">Lab Sessions</a></li><li class="breadcrumb-item"><a href="../labs/lab08-bayes-hmm.html">8 · Bayes' Rule &amp; HMM</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Lab 8 · Bayes’ Rule, Markov Chains &amp; Hidden Markov Models</h1>
+<p class="subtitle lead">Measurement models, state transition models and recursive Bayesian state estimation</p>
+</div>
+
+<div>
+  <div class="description">
+    From Bayes’ rule to hidden Markov models: measurement updates, Markov chains, and the forward algorithm.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- publication-polish-v1 -->
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>About this edition
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>English text and comments were edited for publication. Outputs are archived notebook results, not newly executed results. Lab scaffolds and reference illustrations were supplied by the course. <a href="../publication-notes.html">Source and reproducibility notes</a>.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Summary
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This lab builds up the probabilistic machinery of state estimation step by step. Bayes’ rule is applied to two textbook examples, then to a <strong>measurement model</strong> (a noisy door sensor). A <strong>state transition model</strong> is introduced with a coin-tossing Markov chain and a weather Markov chain, where belief propagation becomes a matrix–vector product. Combining the two yields the <strong>hidden Markov model</strong>: the belief over the door state after repeated observations, the <em>evaluation</em> and <em>decoding</em> problems for the weather/mood HMM, and a generic forward algorithm. An appendix contains short PCA experiments done during the same session.</p>
+</div>
+</div>
+<section id="bayes-rule" class="level2">
+<h2 class="anchored" data-anchor-id="bayes-rule">1. Bayes’ Rule</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md01_01.png" class="img-fluid figure-img" alt="Coursework figure 1: 1. Bayes' Rule"></p>
+<figcaption>Coursework figure 1: 1. Bayes’ Rule</figcaption>
+</figure>
+</div>
+<section id="example-1-the-man-in-grey-trousers" class="level4">
+<h4 class="anchored" data-anchor-id="example-1-the-man-in-grey-trousers">1.1 Example 1: The man in grey trousers</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md03_02.png" class="img-fluid figure-img" alt="Coursework figure 2: 1.1 Example 1: The man in grey trousers"></p>
+<figcaption>Coursework figure 2: 1.1 Example 1: The man in grey trousers</figcaption>
+</figure>
+</div>
+<ul>
+<li><p><span class="math inline">\(Y\)</span> : the event that the person is Professor Y</p></li>
+<li><p><span class="math inline">\(G\)</span> : the event that the person wears grey trousers</p></li>
+</ul>
+<p>Assume the following probabilities are known:</p>
+<ul>
+<li><p><span class="math inline">\(p(Y)=1/15\)</span></p></li>
+<li><p><span class="math inline">\(p(G)=1/4\)</span></p></li>
+<li><p><span class="math inline">\(p(G|Y)=3/8\)</span></p></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>p_Y <span class="op">=</span> <span class="dv">1</span><span class="op">/</span><span class="dv">15</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>p_G <span class="op">=</span> <span class="dv">1</span><span class="op">/</span><span class="dv">4</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>p_GY <span class="op">=</span> <span class="dv">3</span><span class="op">/</span><span class="dv">8</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>What is the following probability?</p>
+<ul>
+<li><span class="math inline">\(p(Y|G)=?\)</span></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>p_YG <span class="op">=</span> (p_GY<span class="op">*</span>p_Y)<span class="op">/</span>p_G</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(p_YG)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>0.1</code></pre>
+</div>
+</div>
+</section>
+<section id="example-2-black-and-white-buttons" class="level4">
+<h4 class="anchored" data-anchor-id="example-2-black-and-white-buttons">1.2 Example 2: Black and white buttons</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md09_03.png" class="img-fluid figure-img" alt="Coursework figure 3: 1.2 Example 2: Black and white buttons"></p>
+<figcaption>Coursework figure 3: 1.2 Example 2: Black and white buttons</figcaption>
+</figure>
+</div>
+<ul>
+<li><p><span class="math inline">\(B\)</span> : the event that a black button is drawn</p></li>
+<li><p><span class="math inline">\(W\)</span> : the event that a white button is drawn</p></li>
+<li><p><span class="math inline">\(Bt1\)</span> : the event that box 1 is chosen</p></li>
+<li><p><span class="math inline">\(Bt2\)</span> : the event that box 2 is chosen</p></li>
+</ul>
+<p>Assume the following probabilities are known:</p>
+<ul>
+<li><p><span class="math inline">\(p(Bt1)=5/13\)</span></p></li>
+<li><p><span class="math inline">\(p(Bt2)=8/13\)</span></p></li>
+<li><p><span class="math inline">\(p(B|Bt1)=3/5\)</span></p></li>
+<li><p><span class="math inline">\(p(B|Bt2)=6/8\)</span></p></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># p(Bt1)  and   p(Bt2)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>p_Bt1 <span class="op">=</span> <span class="dv">5</span><span class="op">/</span><span class="dv">13</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>p_Bt2 <span class="op">=</span> <span class="dv">8</span><span class="op">/</span><span class="dv">13</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># p(B|Bt1)  and  p(B|Bt2)</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>p_B_Bt1 <span class="op">=</span> <span class="dv">3</span><span class="op">/</span><span class="dv">5</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>p_B_Bt2 <span class="op">=</span> <span class="dv">6</span><span class="op">/</span><span class="dv">8</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>What is the following probability?</p>
+<ul>
+<li><span class="math inline">\(p(Bt1|B)=?\)</span></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>p_Bt1_B <span class="op">=</span> (p_B_Bt1<span class="op">*</span>p_Bt1)<span class="op">/</span>(p_B_Bt1<span class="op">*</span>p_Bt1 <span class="op">+</span> p_B_Bt2<span class="op">*</span>p_Bt2)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(p_Bt1_B)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>0.33333333333333337</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="measurement-model" class="level2">
+<h2 class="anchored" data-anchor-id="measurement-model">2. Measurement Model</h2>
+<section id="example-1-what-is-the-probability-that-the-door-is-open-one-observation" class="level4">
+<h4 class="anchored" data-anchor-id="example-1-what-is-the-probability-that-the-door-is-open-one-observation">2.1 Example 1: What is the probability that the door is open? (one observation)</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md16_04.png" class="img-fluid figure-img" alt="Coursework figure 4: 2.1 Example 1: What is the probability that the door is open? (one observation)"></p>
+<figcaption>Coursework figure 4: 2.1 Example 1: What is the probability that the door is open? (one observation)</figcaption>
+</figure>
+</div>
+<ul>
+<li><p>State set <span class="math inline">\(X = \{open, closed\}=\{O, C\}\)</span></p></li>
+<li><p>Observation set <span class="math inline">\(Z = \{sensor\_open, sensor\_closed\}=\{SO, SC\}\)</span></p></li>
+<li><p>Measurement model <span class="math inline">\(P_{zx}\)</span></p>
+<ul>
+<li><span class="math inline">\(p(z_{i}=SO | x_{i}=O) = 0.7\)</span></li>
+<li><span class="math inline">\(p(z_{i}=SC | x_{i}=O) = 0.3\)</span></li>
+<li><span class="math inline">\(p(z_{i}=SO | x_{i}=C) = 0.2\)</span></li>
+<li><span class="math inline">\(p(z_{i}=SC | x_{i}=C) = 0.8\)</span></li>
+</ul></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Measurement Model</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>p_SO_O <span class="op">=</span> <span class="fl">0.7</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>p_SC_O <span class="op">=</span> <span class="fl">0.3</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>p_SO_C <span class="op">=</span> <span class="fl">0.2</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>p_SC_C <span class="op">=</span> <span class="fl">0.8</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We do not know whether the door is open or closed, so the <strong>prior over the state</strong> is set to be uniform.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Initial State Probability</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>p_O <span class="op">=</span> <span class="fl">0.5</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>p_C <span class="op">=</span> <span class="fl">0.5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>When the sensor reports <span class="math inline">\(sensor\_open\)</span>, how does the <strong>probability of the door state</strong> change?</p>
+<ul>
+<li>p(O|SO) = ?</li>
+<li>p(C|SO) = ?</li>
+</ul>
+<p>Let us compute it with Bayes’ rule:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md22_05.png" class="img-fluid figure-img" alt="Coursework figure 5: 2.1 Example 1: What is the probability that the door is open? (one observation)"></p>
+<figcaption>Coursework figure 5: 2.1 Example 1: What is the probability that the door is open? (one observation)</figcaption>
+</figure>
+</div>
+<p>First, ignoring the normalizer <span class="math inline">\(\eta\)</span>, compute <span class="math inline">\(p(SO|O)p(O)\)</span> and <span class="math inline">\(p(SO|C)p(C)\)</span>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md24_06.png" class="img-fluid figure-img" alt="Coursework figure 6: 2.1 Example 1: What is the probability that the door is open? (one observation)"></p>
+<figcaption>Coursework figure 6: 2.1 Example 1: What is the probability that the door is open? (one observation)</figcaption>
+</figure>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># without eta</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>p_O_SO <span class="op">=</span> p_SO_O<span class="op">*</span>p_O</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md26_07.png" class="img-fluid figure-img" alt="Coursework figure 7: 2.1 Example 1: What is the probability that the door is open? (one observation)"></p>
+<figcaption>Coursework figure 7: 2.1 Example 1: What is the probability that the door is open? (one observation)</figcaption>
+</figure>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># without eta</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>p_C_SO <span class="op">=</span> p_SO_C<span class="op">*</span>p_C</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Next, compute the normalizer <span class="math inline">\(\eta\)</span> and apply it to obtain p(O|SO) and p(C|SO).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># compute eta</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>eta <span class="op">=</span> <span class="dv">1</span><span class="op">/</span>(p_O_SO <span class="op">+</span> p_C_SO)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># normalize</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>p_O_SO <span class="op">=</span> eta<span class="op">*</span>p_O_SO</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>p_C_SO <span class="op">=</span> eta<span class="op">*</span>p_C_SO</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"p(open) = "</span> <span class="op">+</span> <span class="bu">str</span>(p_O))</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"p(open|sensor_open) = "</span> <span class="op">+</span> <span class="bu">str</span>(p_O_SO))</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"p(closed|sensor_open) = "</span> <span class="op">+</span> <span class="bu">str</span>(p_C_SO))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>p(open) = 0.5
+p(open|sensor_open) = 0.7777777777777778
+p(closed|sensor_open) = 0.22222222222222224</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="state-transition-model-without-control" class="level2">
+<h2 class="anchored" data-anchor-id="state-transition-model-without-control">3. State Transition Model (without Control)</h2>
+<section id="example-1-coin-tossing" class="level4">
+<h4 class="anchored" data-anchor-id="example-1-coin-tossing">3.1 Example 1: Coin tossing</h4>
+<p><img src="../images/lab08/md32_08.png" class="img-fluid" alt="Coursework figure 8: 3.1 Example 1: Coin tossing"> <img src="../images/lab08/md32_09.png" class="img-fluid" alt="Coursework figure 9: 3.1 Example 1: Coin tossing"></p>
+<ul>
+<li><p>State set <span class="math inline">\(X = \{HH, HT, TH, TT\}\)</span></p></li>
+<li><p>State transition probability matrix <span class="math inline">\(P_{x'x}\)</span></p>
+<ul>
+<li><span class="math inline">\(p(x_{t+1}=HH | x_{t}=HH) = 1/4\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=HT | x_{t}=HH) = 1/4\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=TH | x_{t}=HH) = 1/4\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=TT | x_{t}=HH) = 1/4\)</span></li>
+<li><span class="math inline">\(\dots\)</span></li>
+</ul></li>
+</ul>
+<p>The <strong>belief</strong> is the <strong>probability distribution over the state</strong>:</p>
+<p><span class="math inline">\(bel(x_t) = p(x_t)\)</span>, with <span class="math inline">\(bel \in \mathbb{R}^{|X|}\)</span></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Belief Initialization (Uniform)</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>bel <span class="op">=</span> <span class="dv">1</span><span class="op">/</span><span class="dv">4</span><span class="op">*</span>np.ones((<span class="dv">4</span>,<span class="dv">1</span>))</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(bel)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[0.25]
+ [0.25]
+ [0.25]
+ [0.25]]</code></pre>
+</div>
+</div>
+<p>The <strong>state transition matrix <span class="math inline">\(P_{x'x}\)</span></strong> has as entries the <strong>probabilities <span class="math inline">\(p(x_{t+1} | x_t)\)</span> of moving from state <span class="math inline">\(x_t\)</span> to state <span class="math inline">\(x_{t+1}\)</span></strong>:</p>
+<p><span class="math inline">\(P_{ij} = p(x_{t+1}= i| x_t=j)\)</span></p>
+<p>In this example every transition probability equals 1/4.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md37_10.png" class="img-fluid figure-img" alt="Coursework figure 10: 3.1 Example 1: Coin tossing"></p>
+<figcaption>Coursework figure 10: 3.1 Example 1: Coin tossing</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md38_11.png" class="img-fluid figure-img" alt="Coursework figure 11: 3.1 Example 1: Coin tossing"></p>
+<figcaption>Coursework figure 11: 3.1 Example 1: Coin tossing</figcaption>
+</figure>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Define State Transition Matrix</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>P <span class="op">=</span> <span class="dv">1</span><span class="op">/</span><span class="dv">4</span> <span class="op">*</span> np.ones((<span class="dv">4</span>,<span class="dv">4</span>))</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(P)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[0.25 0.25 0.25 0.25]
+ [0.25 0.25 0.25 0.25]
+ [0.25 0.25 0.25 0.25]
+ [0.25 0.25 0.25 0.25]]</code></pre>
+</div>
+</div>
+<p>How do we compute the <strong>state probabilities</strong> after one transition?</p>
+<p>The relation between <span class="math inline">\(bel(x_{t})\)</span> and <span class="math inline">\(bel(x_{t+1})\)</span> through the state transition probabilities is</p>
+<p><span class="math inline">\(bel(x_{t+1}) =  \sum_{x_{t}}^{} p(x_{t+1}|x_{t}) bel(x_{t})\)</span></p>
+<p>(recall <span class="math inline">\(P_{ij} = p(x_{t+1}= i| x_t=j)\)</span>).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>bel_pre <span class="op">=</span> bel.copy()</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Without State Transition Matrix</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># State Transition</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>bel <span class="op">=</span> np.zeros_like(bel_pre)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>):</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>):</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    bel[i] <span class="op">+=</span> P[i,j]<span class="op">*</span>bel_pre[j]</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(bel)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[0.25]
+ [0.25]
+ [0.25]
+ [0.25]]</code></pre>
+</div>
+</div>
+<p>This computation is of course much simpler as a <strong>matrix–vector product</strong>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co"># With State Transition Matrix</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># State Transition</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>bel <span class="op">=</span> np.zeros_like(bel_pre)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>bel <span class="op">=</span> P <span class="op">@</span> bel_pre</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(bel)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[0.25]
+ [0.25]
+ [0.25]
+ [0.25]]</code></pre>
+</div>
+</div>
+</section>
+<section id="example-2-weather-transitions" class="level4">
+<h4 class="anchored" data-anchor-id="example-2-weather-transitions">3.2 Example 2: Weather transitions</h4>
+<p>In the previous example all transition probabilities were 0.25; here they differ.</p>
+<p>The <strong>Markov chain</strong> below has the weather as its state and the weather change probabilities as transition probabilities.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md45_12.png" class="img-fluid figure-img" alt="Coursework figure 12: 3.2 Example 2: Weather transitions"></p>
+<figcaption>Coursework figure 12: 3.2 Example 2: Weather transitions</figcaption>
+</figure>
+</div>
+<ul>
+<li>State set <span class="math inline">\(X = \{Sunny, Cloudy, Rainy\}=\{S,C,R\}\)</span></li>
+<li>State transition probability <span class="math inline">\(P_{x'x}\)</span>
+<ul>
+<li><span class="math inline">\(p(x_{t+1}=S | x_{t}=S) = 0.6\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=C  | x_{t}=S) = 0.3\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=R | x_{t}=S) = 0.1\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=S | x_{t}=C) = 0.5\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=C  | x_{t}=C) = 0.2\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=R | x_{t}=C) = 0.3\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=S | x_{t}=R) = 0.5\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=C  | x_{t}=R) = 0.3\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=R | x_{t}=R) = 0.2\)</span></li>
+</ul></li>
+</ul>
+<p>(The code below was run in class with a simplified transition matrix; iterating the transition 1000 times shows the belief converging to the stationary distribution of the chain.)</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md47_13.png" class="img-fluid figure-img" alt="Coursework figure 13: 3.2 Example 2: Weather transitions"></p>
+<figcaption>Coursework figure 13: 3.2 Example 2: Weather transitions</figcaption>
+</figure>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Belief Initialization</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co">#bel = 1/3*np.ones((3,1))</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>bel <span class="op">=</span> [[<span class="fl">0.5</span>],[<span class="fl">0.25</span>],[<span class="fl">0.25</span>]]</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(bel)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Define State Transition Matrix</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>P_xx <span class="op">=</span> np.zeros((<span class="dv">3</span>,<span class="dv">3</span>))</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>P_xx[<span class="dv">0</span>,<span class="dv">0</span>] <span class="op">=</span> <span class="fl">0.5</span><span class="op">;</span> P_xx[<span class="dv">0</span>,<span class="dv">1</span>] <span class="op">=</span> <span class="fl">0.5</span><span class="op">;</span> P_xx[<span class="dv">0</span>,<span class="dv">2</span>] <span class="op">=</span> <span class="fl">0.5</span><span class="op">;</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>P_xx[<span class="dv">1</span>,<span class="dv">0</span>] <span class="op">=</span> <span class="fl">0.25</span><span class="op">;</span> P_xx[<span class="dv">1</span>,<span class="dv">1</span>] <span class="op">=</span> <span class="fl">0.25</span><span class="op">;</span> P_xx[<span class="dv">1</span>,<span class="dv">2</span>] <span class="op">=</span> <span class="fl">0.25</span><span class="op">;</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>P_xx[<span class="dv">2</span>,<span class="dv">0</span>] <span class="op">=</span> <span class="fl">0.25</span><span class="op">;</span> P_xx[<span class="dv">2</span>,<span class="dv">1</span>] <span class="op">=</span> <span class="fl">0.25</span><span class="op">;</span> P_xx[<span class="dv">2</span>,<span class="dv">2</span>] <span class="op">=</span> <span class="fl">0.25</span><span class="op">;</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(P_xx)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[0.5], [0.25], [0.25]]
+
+[[0.5  0.5  0.5 ]
+ [0.25 0.25 0.25]
+ [0.25 0.25 0.25]]</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co"># With State Transition Matrix</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="co"># State Transition</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>bel <span class="op">=</span> P_xx<span class="op">@</span>bel</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(bel)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[0.5 ]
+ [0.25]
+ [0.25]]</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co"># State Transition Iteration</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1000</span>):</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a> bel <span class="op">=</span> P_xx<span class="op">@</span>bel</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(bel.T)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[0.5  0.25 0.25]]</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="hidden-markov-model-without-control" class="level2">
+<h2 class="anchored" data-anchor-id="hidden-markov-model-without-control">4. Hidden Markov Model (without Control)</h2>
+<p>The reason for studying the measurement model and the state transition model is to understand the hidden Markov model (HMM).</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md52_14.png" class="img-fluid figure-img" alt="Coursework figure 14: 4. Hidden Markov Model (without Control)"></p>
+<figcaption>Coursework figure 14: 4. Hidden Markov Model (without Control)</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md53_15.png" class="img-fluid figure-img" alt="Coursework figure 15: 4. Hidden Markov Model (without Control)"></p>
+<figcaption>Coursework figure 15: 4. Hidden Markov Model (without Control)</figcaption>
+</figure>
+</div>
+<section id="example-1-what-is-the-probability-that-the-door-is-open-n-observations" class="level4">
+<h4 class="anchored" data-anchor-id="example-1-what-is-the-probability-that-the-door-is-open-n-observations">4.1 Example 1: What is the probability that the door is open? (n observations)</h4>
+<p>The sensor reports <span class="math inline">\(sensor\_open\)</span> twice in a row. How does the probability of the door state change?</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md55_16.png" class="img-fluid figure-img" alt="Coursework figure 16: 4.1 Example 1: What is the probability that the door is open? (n observations)"></p>
+<figcaption>Coursework figure 16: 4.1 Example 1: What is the probability that the door is open? (n observations)</figcaption>
+</figure>
+</div>
+<ul>
+<li><p>State set <span class="math inline">\(X = \{open, closed\}=\{O, C\}\)</span></p></li>
+<li><p>Observation set <span class="math inline">\(Z = \{sensor\_open, sensor\_closed\}=\{SO, SC\}\)</span></p></li>
+<li><p>Measurement model <span class="math inline">\(P_{zx}\)</span></p>
+<ul>
+<li><span class="math inline">\(p(z_{t}=SO | x_{t}=O) = 0.75\)</span></li>
+<li><span class="math inline">\(p(z_{t}=SC | x_{t}=O) = 0.25\)</span></li>
+<li><span class="math inline">\(p(z_{t}=SO | x_{t}=C) = 0.1\)</span></li>
+<li><span class="math inline">\(p(z_{t}=SC | x_{t}=C) = 0.9\)</span></li>
+</ul></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Measurement Model</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>p_SO_O <span class="op">=</span> <span class="fl">0.75</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>p_SC_O <span class="op">=</span> <span class="fl">0.25</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>p_SO_C <span class="op">=</span> <span class="fl">0.1</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>p_SC_C <span class="op">=</span><span class="fl">0.9</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Initial State Probability</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>p_O <span class="op">=</span> <span class="fl">0.5</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>p_C <span class="op">=</span> <span class="fl">0.5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="two-observations" class="level5">
+<h5 class="anchored" data-anchor-id="two-observations">4.1.1 Two observations</h5>
+<p>If the observations are <span class="math inline">\(z_{1:2}=\{sensor\_open, sensor\_open\}\)</span>, how do the following probabilities change?</p>
+<ul>
+<li>p(O|SO, SO) = ?</li>
+<li>p(C|SO, SO) = ?</li>
+</ul>
+<p>We apply Bayes’ rule together with the <strong>Chapman–Kolmogorov equation and the Markov assumption</strong>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md60_17.png" class="img-fluid figure-img" alt="Coursework figure 17: 4.1.1 Two observations"></p>
+<figcaption>Coursework figure 17: 4.1.1 Two observations</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md61_18.png" class="img-fluid figure-img" alt="Coursework figure 18: 4.1.1 Two observations"></p>
+<figcaption>Coursework figure 18: 4.1.1 Two observations</figcaption>
+</figure>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co"># without eta1</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>p_O_SO <span class="op">=</span> p_SO_O <span class="op">*</span> p_O</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>p_C_SO <span class="op">=</span> p_SO_C <span class="op">*</span> p_C</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="co"># compute eta</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>eta1 <span class="op">=</span> <span class="dv">1</span> <span class="op">/</span> (p_O_SO <span class="op">+</span> p_C_SO)</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="co"># normalize</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>p_O_SO <span class="op">=</span> eta1 <span class="op">*</span> p_O_SO</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>p_C_SO <span class="op">=</span> eta1 <span class="op">*</span> p_C_SO</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"p(open) = "</span> <span class="op">+</span> <span class="bu">str</span>(p_O))</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"p(open|sensor_open) = "</span> <span class="op">+</span> <span class="bu">str</span>(p_O_SO))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>p(open) = 0.5
+p(open|sensor_open) = 0.8823529411764706</code></pre>
+</div>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md63_19.png" class="img-fluid figure-img" alt="Coursework figure 19: 4.1.1 Two observations"></p>
+<figcaption>Coursework figure 19: 4.1.1 Two observations</figcaption>
+</figure>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co"># without eta2</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>p_O_SOSO <span class="op">=</span> p_SO_O <span class="op">*</span> p_O_SO</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>p_C_SOSO <span class="op">=</span> p_SO_C <span class="op">*</span> p_C_SO</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="co"># compute eta2</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>eta2 <span class="op">=</span> <span class="dv">1</span><span class="op">/</span>(p_O_SOSO <span class="op">+</span> p_C_SOSO)</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="co"># normalize</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>p_O_SOSO <span class="op">=</span> eta2<span class="op">*</span>p_O_SOSO</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>p_C_SOSO <span class="op">=</span> eta2<span class="op">*</span>p_C_SOSO</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"p(open) = "</span> <span class="op">+</span> <span class="bu">str</span>(p_O))</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"p(open|sensor_open) = "</span> <span class="op">+</span> <span class="bu">str</span>(p_O_SO))</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"p(open|sensor_open,sensor_open) = "</span> <span class="op">+</span> <span class="bu">str</span>(p_O_SOSO))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>p(open) = 0.5
+p(open|sensor_open) = 0.8823529411764706
+p(open|sensor_open,sensor_open) = 0.9825327510917031</code></pre>
+</div>
+</div>
+</section>
+<section id="five-observations" class="level5">
+<h5 class="anchored" data-anchor-id="five-observations">4.1.2 Five observations</h5>
+<p>If the observations are <span class="math inline">\(z_{1:5}=\{sensor\_open, sensor\_closed, sensor\_closed, sensor\_open, sensor\_open\}\)</span>, how does <span class="math inline">\(p(open|z_{1:n})\)</span> evolve over time?</p>
+<p>We solve this using both the <strong>measurement model</strong> and the <strong>state transition probability</strong> (the door does not move, so the transition matrix is the identity).</p>
+<ul>
+<li><p>State set <span class="math inline">\(X = \{open, closed\}=\{O, C\}\)</span></p></li>
+<li><p>Observation set <span class="math inline">\(Z = \{sensor\_open, sensor\_closed\}=\{SO, SC\}\)</span></p></li>
+<li><p>Measurement model <span class="math inline">\(P_{zx}\)</span></p>
+<ul>
+<li><span class="math inline">\(p(z_{t}=SO | x_{t}=O) = 0.75\)</span></li>
+<li><span class="math inline">\(p(z_{t}=SC | x_{t}=O) = 0.25\)</span></li>
+<li><span class="math inline">\(p(z_{t}=SO | x_{t}=C) = 0.1\)</span></li>
+<li><span class="math inline">\(p(z_{t}=SC | x_{t}=C) = 0.9\)</span></li>
+</ul></li>
+<li><p>State transition probability <span class="math inline">\(P_{x'x}\)</span></p>
+<ul>
+<li><span class="math inline">\(p(x_{t+1}=O | x_{t}=O) = 1\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=C  | x_{t}=O) = 0\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=O | x_{t}=C) = 0\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=C | x_{t}=C) = 1\)</span></li>
+</ul></li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md68_20.png" class="img-fluid figure-img" alt="Coursework figure 20: 4.1.2 Five observations"></p>
+<figcaption>Coursework figure 20: 4.1.2 Five observations</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md69_21.png" class="img-fluid figure-img" alt="Coursework figure 21: 4.1.2 Five observations"></p>
+<figcaption>Coursework figure 21: 4.1.2 Five observations</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md70_22.png" class="img-fluid figure-img" alt="Coursework figure 22: 4.1.2 Five observations"></p>
+<figcaption>Coursework figure 22: 4.1.2 Five observations</figcaption>
+</figure>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Define Measurement Model Matrix</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>P_zx <span class="op">=</span> np.array([ [<span class="fl">0.75</span>,  <span class="fl">0.1</span>],</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>                  [<span class="fl">0.25</span>,  <span class="fl">0.9</span>]])</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Define State Transition Matrix</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>P_xx <span class="op">=</span> np.array([ [<span class="dv">1</span>, <span class="dv">0</span>],</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>                  [<span class="dv">0</span>, <span class="dv">1</span>]])</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Initial State Probability(Belief)</span></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>bel <span class="op">=</span> np.ones((<span class="dv">2</span>,<span class="dv">1</span>))</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>bel <span class="op">=</span> bel<span class="op">/</span>np.<span class="bu">sum</span>(bel)</span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Observation Sequence</span></span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>obs <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>]</span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a><span class="co">#obs = [0,0] #0 is open</span></span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a><span class="co"># State Transition with Observation</span></span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(obs)):</span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>  bel <span class="op">=</span> P_xx<span class="op">@</span>bel</span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>  bel <span class="op">=</span> P_zx[obs[i],:].reshape((<span class="dv">2</span>,<span class="dv">1</span>)) <span class="op">*</span>bel</span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a>  bel <span class="op">=</span> bel<span class="op">/</span>np.<span class="bu">sum</span>(bel)     <span class="co"># normalization</span></span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(bel[<span class="dv">0</span>])             <span class="co"># P(open | z_1:t): row 1 is p(O|SO), row 2 is p(O|SO,SO), ...</span></span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[0.88235294]
+[0.67567568]
+[0.36656891]
+[0.81274382]
+[0.97019559]</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="example-2-weather-transitions-measurements" class="level4">
+<h4 class="anchored" data-anchor-id="example-2-weather-transitions-measurements">4.2 Example 2: Weather transitions + measurements</h4>
+<p>This extends the weather example of 3.2 with measurements.</p>
+<p>The <strong>state</strong> is still the weather and the <strong>state transition probabilities</strong> are unchanged.</p>
+<p>The <strong>observation</strong> is the mood of a teaching assistant.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md73_23.png" class="img-fluid figure-img" alt="Coursework figure 23: 4.2 Example 2: Weather transitions + measurements"></p>
+<figcaption>Coursework figure 23: 4.2 Example 2: Weather transitions + measurements</figcaption>
+</figure>
+</div>
+<ul>
+<li>State set <span class="math inline">\(X = \{Sunny, Cloudy, Rainy\}=\{S,C,R\}\)</span></li>
+<li>Observation set <span class="math inline">\(Z = \{Happy, Angry\}=\{H, A\}\)</span></li>
+<li>State transition probability <span class="math inline">\(P_{x'x}\)</span>
+<ul>
+<li><span class="math inline">\(p(x_{t+1}=S | x_{t}=S) = 0.6\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=C  | x_{t}=S) = 0.3\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=R | x_{t}=S) = 0.1\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=S | x_{t}=C) = 0.5\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=C  | x_{t}=C) = 0.2\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=R | x_{t}=C) = 0.3\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=S | x_{t}=R) = 0.5\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=C  | x_{t}=R) = 0.3\)</span></li>
+<li><span class="math inline">\(p(x_{t+1}=R | x_{t}=R) = 0.2\)</span></li>
+</ul></li>
+<li>Measurement model <span class="math inline">\(P_{zx}\)</span>
+<ul>
+<li><span class="math inline">\(p(z_{t}=H | x_{t}=S) = 0.9\)</span></li>
+<li><span class="math inline">\(p(z_{t}=A | x_{t}=S) = 0.1\)</span></li>
+<li><span class="math inline">\(p(z_{t}=H | x_{t}=C) = 0.6\)</span></li>
+<li><span class="math inline">\(p(z_{t}=A | x_{t}=C) = 0.4\)</span></li>
+<li><span class="math inline">\(p(z_{t}=H | x_{t}=R) = 0.2\)</span></li>
+<li><span class="math inline">\(p(z_{t}=A | x_{t}=R) = 0.8\)</span></li>
+</ul></li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md75_24.png" class="img-fluid figure-img" alt="Coursework figure 24: 4.2 Example 2: Weather transitions + measurements"></p>
+<figcaption>Coursework figure 24: 4.2 Example 2: Weather transitions + measurements</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md76_25.png" class="img-fluid figure-img" alt="Coursework figure 25: 4.2 Example 2: Weather transitions + measurements"></p>
+<figcaption>Coursework figure 25: 4.2 Example 2: Weather transitions + measurements</figcaption>
+</figure>
+</div>
+<p>Using the weather model defined above, we solve some of the classical HMM problems.</p>
+<section id="the-evaluation-problem" class="level5">
+<h5 class="anchored" data-anchor-id="the-evaluation-problem">4.2.1 The Evaluation Problem</h5>
+<p>This is the problem already treated in example 4.1: given <span class="math inline">\(z_{1:n}, P_{x'x}, P_{zx}\)</span>, compute the belief <span class="math inline">\(bel(x)\)</span>.</p>
+<p>Correspondence with the textbook notation:</p>
+<ul>
+<li><span class="math inline">\(V == Z\)</span> : observation sequence</li>
+<li><span class="math inline">\(\alpha_t == bel_t\)</span> : belief</li>
+<li><span class="math inline">\(a_{ij} == P_{x'x}\)</span> : state transition probability</li>
+<li><span class="math inline">\(b_{jk} == P_{zx}\)</span> : measurement model</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md80_26.png" class="img-fluid figure-img" alt="Coursework figure 26: 4.2.1 The Evaluation Problem"></p>
+<figcaption>Coursework figure 26: 4.2.1 The Evaluation Problem</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md81_27.png" class="img-fluid figure-img" alt="Coursework figure 27: 4.2.1 The Evaluation Problem"></p>
+<figcaption>Coursework figure 27: 4.2.1 The Evaluation Problem</figcaption>
+</figure>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>np.set_printoptions(<span class="dv">9</span>)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Define State Transition Matrix</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>P_xx <span class="op">=</span> np.zeros((<span class="dv">3</span>,<span class="dv">3</span>))</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>P_xx[<span class="dv">0</span>,<span class="dv">0</span>] <span class="op">=</span> <span class="fl">0.6</span><span class="op">;</span> P_xx[<span class="dv">1</span>,<span class="dv">0</span>] <span class="op">=</span> <span class="fl">0.3</span><span class="op">;</span> P_xx[<span class="dv">2</span>,<span class="dv">0</span>] <span class="op">=</span> <span class="fl">0.1</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>P_xx[<span class="dv">0</span>,<span class="dv">1</span>] <span class="op">=</span> <span class="fl">0.5</span><span class="op">;</span> P_xx[<span class="dv">1</span>,<span class="dv">1</span>] <span class="op">=</span> <span class="fl">0.2</span><span class="op">;</span> P_xx[<span class="dv">2</span>,<span class="dv">1</span>] <span class="op">=</span> <span class="fl">0.3</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>P_xx[<span class="dv">0</span>,<span class="dv">2</span>] <span class="op">=</span> <span class="fl">0.5</span><span class="op">;</span> P_xx[<span class="dv">1</span>,<span class="dv">2</span>] <span class="op">=</span> <span class="fl">0.3</span><span class="op">;</span> P_xx[<span class="dv">2</span>,<span class="dv">2</span>] <span class="op">=</span> <span class="fl">0.2</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Define Measurement Model Matrix</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>P_zx <span class="op">=</span> np.zeros((<span class="dv">2</span>,<span class="dv">3</span>))</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>P_zx[<span class="dv">0</span>,<span class="dv">0</span>] <span class="op">=</span> <span class="fl">0.9</span><span class="op">;</span> P_zx[<span class="dv">0</span>,<span class="dv">1</span>] <span class="op">=</span> <span class="fl">0.6</span><span class="op">;</span> P_zx[<span class="dv">0</span>,<span class="dv">2</span>] <span class="op">=</span> <span class="fl">0.2</span><span class="op">;</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>P_zx[<span class="dv">1</span>,<span class="dv">0</span>] <span class="op">=</span> <span class="fl">0.1</span><span class="op">;</span> P_zx[<span class="dv">1</span>,<span class="dv">1</span>] <span class="op">=</span> <span class="fl">0.4</span><span class="op">;</span> P_zx[<span class="dv">1</span>,<span class="dv">2</span>] <span class="op">=</span> <span class="fl">0.8</span><span class="op">;</span></span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Observation Sequence</span></span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a><span class="co"># H A A H H</span></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>obs <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>]</span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Belief Initialization</span></span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>bel <span class="op">=</span> np.ones((<span class="dv">3</span>,<span class="dv">1</span>))</span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a>bel <span class="op">=</span> bel<span class="op">/</span>np.<span class="bu">sum</span>(bel)</span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a><span class="co"># State Transition with Observation</span></span>
+<span id="cb34-24"><a href="#cb34-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"     Sunny      Cloudy      Rainy"</span>)</span>
+<span id="cb34-25"><a href="#cb34-25" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(obs)):</span>
+<span id="cb34-26"><a href="#cb34-26" aria-hidden="true" tabindex="-1"></a>  bel <span class="op">=</span> P_xx<span class="op">@</span>bel</span>
+<span id="cb34-27"><a href="#cb34-27" aria-hidden="true" tabindex="-1"></a>  bel <span class="op">=</span> P_zx[obs[i],:].reshape((<span class="dv">3</span>,<span class="dv">1</span>)) <span class="op">*</span>bel</span>
+<span id="cb34-28"><a href="#cb34-28" aria-hidden="true" tabindex="-1"></a>  bel <span class="op">=</span> bel<span class="op">/</span>np.<span class="bu">sum</span>(bel)</span>
+<span id="cb34-29"><a href="#cb34-29" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(bel.T)   <span class="co"># probability of each weather state</span></span>
+<span id="cb34-30"><a href="#cb34-30" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     Sunny      Cloudy      Rainy
+[[0.705882353 0.235294118 0.058823529]]
+[[0.196754564 0.381338742 0.421906694]]
+[[0.156773957 0.315995594 0.527230449]]
+[[0.694427353 0.240957634 0.064615013]]
+[[0.72287586  0.233496715 0.043627425]]</code></pre>
+</div>
+</div>
+</section>
+<section id="the-decoding-problem" class="level5">
+<h5 class="anchored" data-anchor-id="the-decoding-problem">4.2.2 The Decoding Problem</h5>
+<p>Given <span class="math inline">\(z_{1:n}, P_{x'x}, P_{zx}\)</span>, find the state sequence <span class="math inline">\(x_{1:n}\)</span> that produced <span class="math inline">\(z_{1:n}\)</span>.</p>
+<p>Here we take the greedy approach of choosing the most probable state of <span class="math inline">\(bel(x)\)</span> at each step of the evaluation problem.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md84_28.png" class="img-fluid figure-img" alt="Coursework figure 28: 4.2.2 The Decoding Problem"></p>
+<figcaption>Coursework figure 28: 4.2.2 The Decoding Problem</figcaption>
+</figure>
+</div>
+<ul>
+<li>Path : sequence of states</li>
+<li><span class="math inline">\(w == x\)</span> : state</li>
+<li><span class="math inline">\(v == z\)</span> : observation</li>
+<li><span class="math inline">\(\alpha_t == bel_t\)</span> : belief</li>
+<li><span class="math inline">\(a_{ij} == P_{x'x}\)</span> : state transition probability (index order reversed)</li>
+<li><span class="math inline">\(b_{jk} == P_{zx}\)</span> : measurement model (index order reversed)</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>np.set_printoptions(<span class="dv">9</span>)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="co">################## Fill Your Code! ##################</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Define State Transition Matrix</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>P_xx <span class="op">=</span> np.zeros((<span class="dv">3</span>,<span class="dv">3</span>))</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>P_xx[<span class="dv">0</span>,<span class="dv">0</span>] <span class="op">=</span> <span class="fl">0.6</span><span class="op">;</span> P_xx[<span class="dv">1</span>,<span class="dv">0</span>] <span class="op">=</span> <span class="fl">0.3</span><span class="op">;</span> P_xx[<span class="dv">2</span>,<span class="dv">0</span>] <span class="op">=</span> <span class="fl">0.1</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>P_xx[<span class="dv">0</span>,<span class="dv">1</span>] <span class="op">=</span> <span class="fl">0.5</span><span class="op">;</span> P_xx[<span class="dv">1</span>,<span class="dv">1</span>] <span class="op">=</span> <span class="fl">0.2</span><span class="op">;</span> P_xx[<span class="dv">2</span>,<span class="dv">1</span>] <span class="op">=</span> <span class="fl">0.3</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>P_xx[<span class="dv">0</span>,<span class="dv">2</span>] <span class="op">=</span> <span class="fl">0.5</span><span class="op">;</span> P_xx[<span class="dv">1</span>,<span class="dv">2</span>] <span class="op">=</span> <span class="fl">0.3</span><span class="op">;</span> P_xx[<span class="dv">2</span>,<span class="dv">2</span>] <span class="op">=</span> <span class="fl">0.2</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Define Measurement Model Matrix</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>P_zx <span class="op">=</span> np.zeros((<span class="dv">2</span>,<span class="dv">3</span>))</span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>P_zx[<span class="dv">0</span>,<span class="dv">0</span>] <span class="op">=</span> <span class="fl">0.9</span><span class="op">;</span> P_zx[<span class="dv">0</span>,<span class="dv">1</span>] <span class="op">=</span> <span class="fl">0.6</span><span class="op">;</span> P_zx[<span class="dv">0</span>,<span class="dv">2</span>] <span class="op">=</span> <span class="fl">0.2</span><span class="op">;</span></span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>P_zx[<span class="dv">1</span>,<span class="dv">0</span>] <span class="op">=</span> <span class="fl">0.1</span><span class="op">;</span> P_zx[<span class="dv">1</span>,<span class="dv">1</span>] <span class="op">=</span> <span class="fl">0.4</span><span class="op">;</span> P_zx[<span class="dv">1</span>,<span class="dv">2</span>] <span class="op">=</span> <span class="fl">0.8</span><span class="op">;</span></span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Observation Sequence</span></span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a><span class="co"># H A A H H</span></span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>obs <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>]</span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Belief Initialization</span></span>
+<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a>bel <span class="op">=</span> np.ones((<span class="dv">3</span>,<span class="dv">1</span>))</span>
+<span id="cb36-21"><a href="#cb36-21" aria-hidden="true" tabindex="-1"></a>bel <span class="op">=</span> bel<span class="op">/</span>np.<span class="bu">sum</span>(bel)</span>
+<span id="cb36-22"><a href="#cb36-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-23"><a href="#cb36-23" aria-hidden="true" tabindex="-1"></a><span class="co"># State Transition with Observation</span></span>
+<span id="cb36-24"><a href="#cb36-24" aria-hidden="true" tabindex="-1"></a>Path <span class="op">=</span> []</span>
+<span id="cb36-25"><a href="#cb36-25" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(obs)):</span>
+<span id="cb36-26"><a href="#cb36-26" aria-hidden="true" tabindex="-1"></a>  bel <span class="op">=</span> P_xx<span class="op">@</span>bel</span>
+<span id="cb36-27"><a href="#cb36-27" aria-hidden="true" tabindex="-1"></a>  bel <span class="op">=</span> P_zx[obs[i],:].reshape((<span class="dv">3</span>,<span class="dv">1</span>)) <span class="op">*</span>bel</span>
+<span id="cb36-28"><a href="#cb36-28" aria-hidden="true" tabindex="-1"></a>  bel <span class="op">=</span> bel<span class="op">/</span>np.<span class="bu">sum</span>(bel)</span>
+<span id="cb36-29"><a href="#cb36-29" aria-hidden="true" tabindex="-1"></a>  j <span class="op">=</span> np.argmax(bel)</span>
+<span id="cb36-30"><a href="#cb36-30" aria-hidden="true" tabindex="-1"></a>  Path.append(j)</span>
+<span id="cb36-31"><a href="#cb36-31" aria-hidden="true" tabindex="-1"></a><span class="co">#####################################################</span></span>
+<span id="cb36-32"><a href="#cb36-32" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(Path)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[0, 2, 2, 0, 0]</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="limitations-of-hmms-and-the-need-for-rnns" class="level4">
+<h4 class="anchored" data-anchor-id="limitations-of-hmms-and-the-need-for-rnns">4.3 Limitations of HMMs and the Need for RNNs</h4>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/md88_29.png" class="img-fluid figure-img" alt="Coursework figure 29: 4.3 Limitations of HMMs and the Need for RNNs"></p>
+<figcaption>Coursework figure 29: 4.3 Limitations of HMMs and the Need for RNNs</figcaption>
+</figure>
+</div>
+<p>For reference, a generic implementation of the HMM <strong>forward algorithm</strong> (<span class="math inline">\(\alpha\)</span> recursion) on a small 3-state model:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> forward_algorithm(pi, A, B, observations):</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    T <span class="op">=</span> <span class="bu">len</span>(observations)</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>    N <span class="op">=</span> <span class="bu">len</span>(pi)</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Step 1: Initialization</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>    alpha <span class="op">=</span> np.zeros((T, N))</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>    alpha[<span class="dv">0</span>, :] <span class="op">=</span> pi <span class="op">*</span> B[:, observations[<span class="dv">0</span>]]</span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Step 2: Recursion</span></span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> t <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, T):</span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(N):</span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>            alpha[t, j] <span class="op">=</span> np.<span class="bu">sum</span>(alpha[t<span class="op">-</span><span class="dv">1</span>, :] <span class="op">*</span> A[:, j]) <span class="op">*</span> B[j, observations[t]]</span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Step 3: Termination</span></span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a>    P_O_given_lambda <span class="op">=</span> np.<span class="bu">sum</span>(alpha[<span class="op">-</span><span class="dv">1</span>, :])</span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> P_O_given_lambda, alpha</span>
+<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a><span class="co"># HMM parameters</span></span>
+<span id="cb38-22"><a href="#cb38-22" aria-hidden="true" tabindex="-1"></a>pi <span class="op">=</span> np.array([<span class="fl">0.4</span>, <span class="fl">0.3</span>, <span class="fl">0.3</span>])  <span class="co"># initial state distribution</span></span>
+<span id="cb38-23"><a href="#cb38-23" aria-hidden="true" tabindex="-1"></a>A <span class="op">=</span> np.array([[<span class="fl">0.5</span>, <span class="fl">0.2</span>, <span class="fl">0.3</span>],   <span class="co"># transition matrix</span></span>
+<span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a>              [<span class="fl">0.3</span>, <span class="fl">0.5</span>, <span class="fl">0.2</span>],</span>
+<span id="cb38-25"><a href="#cb38-25" aria-hidden="true" tabindex="-1"></a>              [<span class="fl">0.2</span>, <span class="fl">0.3</span>, <span class="fl">0.5</span>]])</span>
+<span id="cb38-26"><a href="#cb38-26" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> np.array([[<span class="fl">0.7</span>, <span class="fl">0.1</span>, <span class="fl">0.2</span>],   <span class="co"># emission matrix</span></span>
+<span id="cb38-27"><a href="#cb38-27" aria-hidden="true" tabindex="-1"></a>              [<span class="fl">0.1</span>, <span class="fl">0.6</span>, <span class="fl">0.3</span>],</span>
+<span id="cb38-28"><a href="#cb38-28" aria-hidden="true" tabindex="-1"></a>              [<span class="fl">0.3</span>, <span class="fl">0.2</span>, <span class="fl">0.5</span>]])</span>
+<span id="cb38-29"><a href="#cb38-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-30"><a href="#cb38-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Observation sequence</span></span>
+<span id="cb38-31"><a href="#cb38-31" aria-hidden="true" tabindex="-1"></a>observations <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">1</span>]</span>
+<span id="cb38-32"><a href="#cb38-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-33"><a href="#cb38-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Likelihood via the forward algorithm</span></span>
+<span id="cb38-34"><a href="#cb38-34" aria-hidden="true" tabindex="-1"></a>probability, alpha_matrix <span class="op">=</span> forward_algorithm(pi, A, B, observations)</span>
+<span id="cb38-35"><a href="#cb38-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-36"><a href="#cb38-36" aria-hidden="true" tabindex="-1"></a><span class="co"># Print results</span></span>
+<span id="cb38-37"><a href="#cb38-37" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Probability of the observation sequence: </span><span class="sc">{</span>probability<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb38-38"><a href="#cb38-38" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Alpha matrix from the forward algorithm:"</span>)</span>
+<span id="cb38-39"><a href="#cb38-39" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(alpha_matrix)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Probability of the observation sequence: 0.0030967322999999997
+Alpha matrix from the forward algorithm:
+[[0.28       0.03       0.09      ]
+ [0.0167     0.0588     0.027     ]
+ [0.006278   0.012252   0.015135  ]
+ [0.00688912 0.00119221 0.00357039]
+ [0.00045163 0.00182703 0.00081807]]</code></pre>
+</div>
+</div>
+</section>
+<section id="appendix-pca-experiments" class="level3">
+<h3 class="anchored" data-anchor-id="appendix-pca-experiments">Appendix · PCA Experiments</h3>
+<p>Short principal component analysis (PCA) experiments done in the same session: projecting 3-D and 5-D random data onto 2 and 3 principal components with scikit-learn, visualizing a synthetic binary classification problem in PCA space, and finally computing PCA by hand from the covariance matrix and its eigen-decomposition.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.decomposition <span class="im">import</span> PCA</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> StandardScaler</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Toy data</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>data1 <span class="op">=</span> np.random.rand(<span class="dv">50</span>, <span class="dv">3</span>)  <span class="co"># 3-D data</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>data2 <span class="op">=</span> np.random.rand(<span class="dv">50</span>, <span class="dv">5</span>)  <span class="co"># 5-D data</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Standardize</span></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>scaler <span class="op">=</span> StandardScaler()</span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>data1_scaled <span class="op">=</span> scaler.fit_transform(data1)</span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>data2_scaled <span class="op">=</span> scaler.fit_transform(data2)</span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a><span class="co"># PCA</span></span>
+<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a>pca <span class="op">=</span> PCA(n_components<span class="op">=</span><span class="dv">2</span>)  <span class="co"># keep 2 principal components</span></span>
+<span id="cb40-16"><a href="#cb40-16" aria-hidden="true" tabindex="-1"></a>data1_pca <span class="op">=</span> pca.fit_transform(data1_scaled)</span>
+<span id="cb40-17"><a href="#cb40-17" aria-hidden="true" tabindex="-1"></a>data2_pca <span class="op">=</span> pca.fit_transform(data2_scaled)</span>
+<span id="cb40-18"><a href="#cb40-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-19"><a href="#cb40-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize</span></span>
+<span id="cb40-20"><a href="#cb40-20" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb40-21"><a href="#cb40-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-22"><a href="#cb40-22" aria-hidden="true" tabindex="-1"></a>plt.scatter(data1_pca[:, <span class="dv">0</span>], data1_pca[:, <span class="dv">1</span>], label<span class="op">=</span><span class="st">'Data 1 (3D)'</span>)</span>
+<span id="cb40-23"><a href="#cb40-23" aria-hidden="true" tabindex="-1"></a>plt.scatter(data2_pca[:, <span class="dv">0</span>], data2_pca[:, <span class="dv">1</span>], label<span class="op">=</span><span class="st">'Data 2 (5D)'</span>)</span>
+<span id="cb40-24"><a href="#cb40-24" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb40-25"><a href="#cb40-25" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Principal Component 1'</span>)</span>
+<span id="cb40-26"><a href="#cb40-26" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Principal Component 2'</span>)</span>
+<span id="cb40-27"><a href="#cb40-27" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'PCA Comparison of Different Dimensional Data'</span>)</span>
+<span id="cb40-28"><a href="#cb40-28" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/out92_30.png" class="img-fluid figure-img" alt="Recorded output 30: Appendix · PCA Experiments"></p>
+<figcaption>Recorded output 30: Appendix · PCA Experiments</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.decomposition <span class="im">import</span> PCA</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> StandardScaler</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> mpl_toolkits.mplot3d <span class="im">import</span> Axes3D</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Toy data</span></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>data1 <span class="op">=</span> np.random.rand(<span class="dv">50</span>, <span class="dv">3</span>)  <span class="co"># 3-D data</span></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>data2 <span class="op">=</span> np.random.rand(<span class="dv">50</span>, <span class="dv">5</span>)  <span class="co"># 5-D data</span></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Standardize</span></span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>scaler <span class="op">=</span> StandardScaler()</span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a>data1_scaled <span class="op">=</span> scaler.fit_transform(data1)</span>
+<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a>data2_scaled <span class="op">=</span> scaler.fit_transform(data2)</span>
+<span id="cb41-15"><a href="#cb41-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-16"><a href="#cb41-16" aria-hidden="true" tabindex="-1"></a><span class="co"># PCA</span></span>
+<span id="cb41-17"><a href="#cb41-17" aria-hidden="true" tabindex="-1"></a>pca <span class="op">=</span> PCA(n_components<span class="op">=</span><span class="dv">3</span>)  <span class="co"># keep 3 principal components</span></span>
+<span id="cb41-18"><a href="#cb41-18" aria-hidden="true" tabindex="-1"></a>data1_pca <span class="op">=</span> pca.fit_transform(data1_scaled)</span>
+<span id="cb41-19"><a href="#cb41-19" aria-hidden="true" tabindex="-1"></a>data2_pca <span class="op">=</span> pca.fit_transform(data2_scaled)</span>
+<span id="cb41-20"><a href="#cb41-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-21"><a href="#cb41-21" aria-hidden="true" tabindex="-1"></a><span class="co"># 3-D scatter plot</span></span>
+<span id="cb41-22"><a href="#cb41-22" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> plt.figure(figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">6</span>))</span>
+<span id="cb41-23"><a href="#cb41-23" aria-hidden="true" tabindex="-1"></a>ax <span class="op">=</span> fig.add_subplot(<span class="dv">111</span>, projection<span class="op">=</span><span class="st">'3d'</span>)</span>
+<span id="cb41-24"><a href="#cb41-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-25"><a href="#cb41-25" aria-hidden="true" tabindex="-1"></a>ax.scatter(data1_pca[:, <span class="dv">0</span>], data1_pca[:, <span class="dv">1</span>], data1_pca[:, <span class="dv">2</span>], label<span class="op">=</span><span class="st">'Data 1 (3D)'</span>)</span>
+<span id="cb41-26"><a href="#cb41-26" aria-hidden="true" tabindex="-1"></a>ax.scatter(data2_pca[:, <span class="dv">0</span>], data2_pca[:, <span class="dv">1</span>], data2_pca[:, <span class="dv">2</span>], label<span class="op">=</span><span class="st">'Data 2 (5D)'</span>)</span>
+<span id="cb41-27"><a href="#cb41-27" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Principal Component 1'</span>)</span>
+<span id="cb41-28"><a href="#cb41-28" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Principal Component 2'</span>)</span>
+<span id="cb41-29"><a href="#cb41-29" aria-hidden="true" tabindex="-1"></a>ax.set_zlabel(<span class="st">'Principal Component 3'</span>)</span>
+<span id="cb41-30"><a href="#cb41-30" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'3D PCA Comparison of Different Dimensional Data'</span>)</span>
+<span id="cb41-31"><a href="#cb41-31" aria-hidden="true" tabindex="-1"></a>ax.legend()</span>
+<span id="cb41-32"><a href="#cb41-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-33"><a href="#cb41-33" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/out93_31.png" class="img-fluid figure-img" alt="Recorded output 31: Appendix · PCA Experiments"></p>
+<figcaption>Recorded output 31: Appendix · PCA Experiments</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> make_classification</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.decomposition <span class="im">import</span> PCA</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> StandardScaler</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Synthetic data</span></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>X, y <span class="op">=</span> make_classification(n_samples<span class="op">=</span><span class="dv">100</span>, n_features<span class="op">=</span><span class="dv">20</span>, n_classes<span class="op">=</span><span class="dv">2</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Train/test split</span></span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(X, y, test_size<span class="op">=</span><span class="fl">0.2</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Standardize</span></span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>scaler <span class="op">=</span> StandardScaler()</span>
+<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a>X_train_scaled <span class="op">=</span> scaler.fit_transform(X_train)</span>
+<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a>X_test_scaled <span class="op">=</span> scaler.transform(X_test)</span>
+<span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a><span class="co"># PCA (reduce to 2 dimensions)</span></span>
+<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a>pca <span class="op">=</span> PCA(n_components<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a>X_train_pca <span class="op">=</span> pca.fit_transform(X_train_scaled)</span>
+<span id="cb42-22"><a href="#cb42-22" aria-hidden="true" tabindex="-1"></a>X_test_pca <span class="op">=</span> pca.transform(X_test_scaled)</span>
+<span id="cb42-23"><a href="#cb42-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-24"><a href="#cb42-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize the binary classes</span></span>
+<span id="cb42-25"><a href="#cb42-25" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">6</span>))</span>
+<span id="cb42-26"><a href="#cb42-26" aria-hidden="true" tabindex="-1"></a>scatter <span class="op">=</span> plt.scatter(X_train_pca[:, <span class="dv">0</span>], X_train_pca[:, <span class="dv">1</span>], c<span class="op">=</span>y_train, cmap<span class="op">=</span><span class="st">'viridis'</span>, edgecolor<span class="op">=</span><span class="st">'k'</span>, s<span class="op">=</span><span class="dv">50</span>, label<span class="op">=</span><span class="st">'Training Data'</span>)</span>
+<span id="cb42-27"><a href="#cb42-27" aria-hidden="true" tabindex="-1"></a>plt.scatter(X_test_pca[:, <span class="dv">0</span>], X_test_pca[:, <span class="dv">1</span>], c<span class="op">=</span>y_test, cmap<span class="op">=</span><span class="st">'viridis'</span>, marker<span class="op">=</span><span class="st">'x'</span>, s<span class="op">=</span><span class="dv">100</span>, label<span class="op">=</span><span class="st">'Test Data'</span>)</span>
+<span id="cb42-28"><a href="#cb42-28" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Principal Component 1'</span>)</span>
+<span id="cb42-29"><a href="#cb42-29" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Principal Component 2'</span>)</span>
+<span id="cb42-30"><a href="#cb42-30" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Binary Classification with PCA'</span>)</span>
+<span id="cb42-31"><a href="#cb42-31" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb42-32"><a href="#cb42-32" aria-hidden="true" tabindex="-1"></a>plt.colorbar(scatter)</span>
+<span id="cb42-33"><a href="#cb42-33" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/lab08/out94_32.png" class="img-fluid figure-img" alt="Recorded output 32: Appendix · PCA Experiments"></p>
+<figcaption>Recorded output 32: Appendix · PCA Experiments</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 4x4 random matrix (toy data)</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> np.random.rand(<span class="dv">4</span>, <span class="dv">4</span>)</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Standardize</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>mean <span class="op">=</span> np.mean(data, axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>normalized_data <span class="op">=</span> data <span class="op">-</span> mean</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Covariance matrix</span></span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>covariance_matrix <span class="op">=</span> np.cov(normalized_data, rowvar<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Eigenvalues and eigenvectors</span></span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>eigenvalues, eigenvectors <span class="op">=</span> np.linalg.eig(covariance_matrix)</span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Sort components by decreasing eigenvalue</span></span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>sorted_indices <span class="op">=</span> np.argsort(eigenvalues)[::<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a>eigenvalues <span class="op">=</span> eigenvalues[sorted_indices]</span>
+<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a>eigenvectors <span class="op">=</span> eigenvectors[:, sorted_indices]</span>
+<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep the first two principal components</span></span>
+<span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a>num_components <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb43-23"><a href="#cb43-23" aria-hidden="true" tabindex="-1"></a>selected_eigenvectors <span class="op">=</span> eigenvectors[:, :num_components]</span>
+<span id="cb43-24"><a href="#cb43-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-25"><a href="#cb43-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Project the data</span></span>
+<span id="cb43-26"><a href="#cb43-26" aria-hidden="true" tabindex="-1"></a>data_pca <span class="op">=</span> np.dot(normalized_data, selected_eigenvectors)</span>
+<span id="cb43-27"><a href="#cb43-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-28"><a href="#cb43-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Print results</span></span>
+<span id="cb43-29"><a href="#cb43-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Original Data:"</span>)</span>
+<span id="cb43-30"><a href="#cb43-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(data)</span>
+<span id="cb43-31"><a href="#cb43-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Principal Components:"</span>)</span>
+<span id="cb43-32"><a href="#cb43-32" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(selected_eigenvectors)</span>
+<span id="cb43-33"><a href="#cb43-33" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Data after PCA:"</span>)</span>
+<span id="cb43-34"><a href="#cb43-34" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(data_pca)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Original Data:
+[[0.400763061 0.559640331 0.155240246 0.18192813 ]
+ [0.861785621 0.946115462 0.373309316 0.270744673]
+ [0.643999543 0.408734171 0.025386356 0.156152597]
+ [0.715972229 0.658923942 0.027095993 0.221972162]]
+
+Principal Components:
+[[-0.496881935 -0.816441143]
+ [-0.723359283  0.227325025]
+ [-0.452629414  0.530761   ]
+ [-0.15807057   0.006320896]]
+
+Data after PCA:
+[[ 0.186748924  0.194189156]
+ [-0.434628988  0.021950797]
+ [ 0.237898526 -0.107788167]
+ [ 0.009981537 -0.108351786]]</code></pre>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Coursework portfolio · Built with Quarto</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>
