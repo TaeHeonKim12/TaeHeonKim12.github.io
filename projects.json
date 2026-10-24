@@ -1,0 +1,75 @@
+[
+  {
+    "id": "ml-portfolio",
+    "title": "Machine Learning for Portfolio Formation",
+    "description": "Tree-based portfolio construction using firm characteristics, compared with conventional sorting methods.",
+    "methods": [
+      "Machine learning",
+      "Portfolio formation",
+      "Asset pricing"
+    ],
+    "status": "Report forthcoming",
+    "featured": true,
+    "url": "projects/ml-portfolio.html",
+    "pdf": null,
+    "github": null
+  },
+  {
+    "id": "asset-pricing",
+    "title": "Empirical Asset Pricing Replication",
+    "description": "Replication of selected empirical analyses using CRSP and Compustat stock characteristics.",
+    "methods": [
+      "Empirical finance",
+      "R / Python",
+      "CRSP / Compustat"
+    ],
+    "status": "Report forthcoming",
+    "featured": true,
+    "url": "projects/asset-pricing.html",
+    "pdf": null,
+    "github": null
+  },
+  {
+    "id": "credit-rating",
+    "title": "Machine Learning for Credit Rating Prediction",
+    "description": "Assessing the predictive contribution of institutional shareholder voting information to credit rating changes.",
+    "methods": [
+      "Credit ratings",
+      "Machine learning",
+      "SMOTE / CTGAN"
+    ],
+    "status": "Report forthcoming",
+    "featured": false,
+    "url": "projects/credit-rating.html",
+    "pdf": null,
+    "github": null
+  },
+  {
+    "id": "trading-strategy",
+    "title": "Quantitative Trading Strategy",
+    "description": "A reserved entry for a future quantitative trading report. Strategy details and performance are not yet provided.",
+    "methods": [
+      "Quantitative finance",
+      "Methods to be added"
+    ],
+    "status": "Planned entry",
+    "featured": false,
+    "url": "projects/trading-strategy.html",
+    "pdf": null,
+    "github": null
+  },
+  {
+    "id": "data-engineering",
+    "title": "Computational Finance & Data Engineering",
+    "description": "A reserved entry for a report on financial data workflows and computational implementation.",
+    "methods": [
+      "Financial data",
+      "Methods to be added"
+    ],
+    "status": "Planned entry",
+    "featured": false,
+    "url": "projects/data-engineering.html",
+    "pdf": null,
+    "github": null
+  }
+]
