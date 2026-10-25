@@ -30,6 +30,21 @@
     "github": null
   },
   {
+    "id": "research-notes",
+    "title": "Research Notes & Computational Studies",
+    "description": "Financial machine learning, municipal bond transaction analysis, polynomial regression, and unsupervised learning, with code, figures, and interpretation.",
+    "methods": [
+      "Empirical finance",
+      "Python / R / SQL",
+      "Statistical learning"
+    ],
+    "status": "Reports and computational studies",
+    "featured": true,
+    "url": "projects/research-notes/index.html",
+    "pdf": null,
+    "github": null
+  },
+  {
     "id": "credit-rating",
     "title": "Machine Learning for Credit Rating Prediction",
     "description": "Assessing the predictive contribution of institutional shareholder voting information to credit rating changes.",
